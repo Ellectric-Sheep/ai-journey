@@ -47,6 +47,11 @@
             "type": "shell",
             "label": "c: 编译并运行当前文件 (gcc)",
             "command": "C:\\Program Files (x86)\\CodeBlocks\\MinGW64\\bin\\gcc.exe",
+            "options": {
+                "env": {
+                    "PATH": "C:\\Program Files (x86)\\CodeBlocks\\MinGW64\\bin;${env:PATH}"
+                }
+            },
             "args": [
                 "-std=c11",
                 "-g",
@@ -63,6 +68,11 @@
             "type": "shell",
             "label": "cpp: 编译并运行当前文件 (g++)",
             "command": "C:\\Program Files (x86)\\CodeBlocks\\MinGW64\\bin\\g++.exe",
+            "options": {
+                "env": {
+                    "PATH": "C:\\Program Files (x86)\\CodeBlocks\\MinGW64\\bin;${env:PATH}"
+                }
+            },
             "args": [
                 "-std=c++17",
                 "-g",
