@@ -1,6 +1,4 @@
-a = 5
-b = 3
-for i in range(2):
-    a += b
+a = 0
+for i in range(5):
+    a += i
     print(a)
-    
