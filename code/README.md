@@ -7,6 +7,5 @@
 | `java/` | Java | VS Code `Ctrl+Shift+B`；或 `javac Hello.java && java Hello` |
 | `python/` | Python | VS Code `Ctrl+F5`；或 `python hello.py` |
 | `web/` | Web 全栈（Java 后端） | 见 `web/README.md` |
-| `sql/` | SQL（SQLite 可视化练习） | 双击 `start-gui.bat` |
 
 > 编译产物（bin/、obj/、*.exe、*.class）已被 .gitignore 忽略，不会提交进仓库。
