@@ -1,29 +1,47 @@
-# SQL 学习区（轻量版）
+# SQL 学习区（MySQL 版）
 
-## 可视化窗口（零安装，双击即用）
+## 连接信息
 
-**双击 `start-gui.bat`** → 弹出可视化窗口：
-- 左侧：数据表列表，点击即浏览表内容
-- 上方：SQL 输入框（Ctrl+Enter 执行，可多句用 `;` 分隔）
+| 项 | 值 |
+|---|---|
+| 主机 | localhost:3306 |
+| 用户 | root |
+| 密码 | root |
+| 数据库 | StudyDB |
+
+## 可视化窗口（双击即用）
+
+**双击 `start-gui.bat`** → 弹出可视化窗口（连接 MySQL）：
+- 左侧：数据表列表，点击浏览
+- 上方：SQL 输入框（Ctrl+Enter 执行）
 - 下方：结果表格 / 错误提示
-- 「重置数据」按钮：数据改乱了随时还原
+- 「重置数据」按钮：一键还原
+
+## 启动 / 停止 MySQL
+
+- 启动：双击 `%LOCALAPPDATA%\Programs\MySQL\start-mysql.bat`
+- 停止：双击 `stop-mysql.bat`
+- 免安装版开机不自启，要用时先启动
+
+## 命令行练习（可选）
+
+```bash
+mysql -u root -proot        # 进入 SQL 交互模式
+```
 
 ## 文件说明
 
 | 文件 | 内容 |
 |---|---|
-| `start-gui.bat` | 双击打开可视化练习窗口 |
-| `01_建库建表.sql` | 学生/课程/成绩三张表 |
-| `02_增删改查.sql` | CRUD + JOIN + GROUP BY 示例 |
-| `03_练习题.sql` | 5 道练习题（答案在注释里） |
-| `demo.py` | 命令行重建练习数据库 |
-| `demo.db` | 生成的数据库文件（被 gitignore） |
+| `start-gui.bat` | 可视化练习窗口 |
+| `01_建库建表.sql` | 建库建表 |
+| `02_增删改查.sql` | CRUD 示例 |
+| `03_练习题.sql` | 练习题（答案在注释） |
+| `demo.py` | 命令行重置练习数据 |
 
 ## 学习路线
 
-1. 打开可视化窗口，点左侧表浏览 → 熟悉三张表长什么样
-2. 在 SQL 框输入 `SELECT * FROM students;` → Ctrl+Enter
-3. 每天从 `03_练习题.sql` 选题做
-4. 语法进阶：JOIN → GROUP BY → 子查询 → 事务
-
-> 这是 SQLite（单文件数据库，零服务零配置）。以后学 Java 后端需要 MySQL 时再升级，SQL 语法 90% 通用。
+1. 双击可视化窗口 → 点左侧表熟悉结构
+2. 敲 `SELECT * FROM students;` → Ctrl+Enter
+3. 每天做 `03_练习题.sql` 的题
+4. 进阶：JOIN → GROUP BY → 子查询 → 事务 → 索引

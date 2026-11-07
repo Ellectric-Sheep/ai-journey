@@ -1,13 +1,15 @@
-"""SQLite 可视化练习窗口（零安装：纯 Python 标准库）
+"""MySQL 可视化练习窗口
+依赖: pip install pymysql（已装）
 双击 start-gui.bat 打开
+连接: localhost:3306 root/root, 数据库 StudyDB
 """
-import sqlite3
-import os
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk
+import pymysql
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-DB = os.path.join(HERE, 'demo.db')
+DB = 'StudyDB'
+CFG = dict(host='localhost', port=3306, user='root', password='root',
+           charset='utf8mb4', autocommit=False)
 
 SEED = """
 INSERT INTO students (name, age, major) VALUES ('张三', 20, '计算机科学');
@@ -18,27 +20,32 @@ INSERT INTO scores VALUES (1, 1, 92), (1, 2, 88), (2, 1, 76), (3, 3, 95);
 """
 
 
-def init_db():
-    conn = sqlite3.connect(DB)
-    cur = conn.cursor()
-    with open(os.path.join(HERE, '01_建库建表.sql'), encoding='utf-8') as f:
-        cur.executescript(f.read())
-    cur.executescript(SEED)
-    conn.commit()
-    conn.close()
+def get_conn(db=None):
+    kwargs = dict(CFG)
+    if db:
+        kwargs['database'] = db
+    return pymysql.connect(**kwargs)
 
 
-if not os.path.exists(DB):
-    init_db()
+def ensure_db():
+    conn = get_conn()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(f'CREATE DATABASE IF NOT EXISTS {DB} DEFAULT CHARACTER SET utf8mb4')
+        conn.commit()
+    finally:
+        conn.close()
+
+
+ensure_db()
 
 
 class App:
     def __init__(self, root):
         self.root = root
-        root.title('SQL 练习窗口 (SQLite)')
+        root.title('SQL 练习窗口 (MySQL)')
         root.geometry('1000x620')
 
-        # 左侧：表列表
         left = ttk.Frame(root, width=170)
         left.pack(side='left', fill='y', padx=6, pady=6)
         ttk.Label(left, text='数据表（点击浏览）').pack(anchor='w')
@@ -46,7 +53,6 @@ class App:
         self.tables.pack(fill='both', expand=True, pady=4)
         self.tables.bind('<<ListboxSelect>>', self.show_table)
 
-        # 右侧：SQL 输入 + 结果
         right = ttk.Frame(root)
         right.pack(side='right', fill='both', expand=True, padx=6, pady=6)
         ttk.Label(right, text='SQL 输入（Ctrl+Enter 执行，可多句用 ; 分隔）').pack(anchor='w')
@@ -58,7 +64,6 @@ class App:
         btns.pack(fill='x', pady=4)
         ttk.Button(btns, text='执行 SQL', command=self.run_sql).pack(side='left')
         ttk.Button(btns, text='重置数据', command=self.reset).pack(side='left', padx=8)
-        ttk.Button(btns, text='清空结果', command=lambda: self.fill([], [])).pack(side='left')
 
         ttk.Label(right, text='结果').pack(anchor='w')
         self.tree = ttk.Treeview(right, show='headings')
@@ -74,9 +79,15 @@ class App:
         self.run_query(f'SELECT * FROM {name} LIMIT 200')
 
     def refresh_tables(self):
-        conn = sqlite3.connect(DB)
-        rows = conn.execute("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name").fetchall()
-        conn.close()
+        conn = get_conn(DB)
+        try:
+            with conn.cursor() as cur:
+                cur.execute('SHOW TABLES')
+                rows = cur.fetchall()
+        except Exception:
+            rows = []
+        finally:
+            conn.close()
         self.tables.delete(0, 'end')
         for r in rows:
             self.tables.insert('end', r[0])
@@ -91,17 +102,18 @@ class App:
                 self.run_query(stmt)
 
     def run_query(self, sql):
-        conn = sqlite3.connect(DB)
+        conn = get_conn(DB)
         try:
-            cur = conn.execute(sql)
-            if sql.lstrip().upper().startswith('SELECT'):
-                rows = cur.fetchall()
-                cols = [d[0] for d in cur.description] if cur.description else []
-                self.fill(cols, rows)
-            else:
-                conn.commit()
-                self.fill(['结果'], [[f'执行成功，影响 {cur.rowcount} 行']])
-                self.refresh_tables()
+            with conn.cursor() as cur:
+                cur.execute(sql)
+                if sql.lstrip().upper().startswith('SELECT'):
+                    rows = cur.fetchall()
+                    cols = [d[0] for d in cur.description] if cur.description else []
+                    self.fill(cols, rows)
+                else:
+                    conn.commit()
+                    self.fill(['结果'], [[f'执行成功，影响 {cur.rowcount} 行']])
+                    self.refresh_tables()
         except Exception as e:
             self.fill(['错误'], [[str(e)]])
         finally:
@@ -117,9 +129,39 @@ class App:
             self.tree.insert('', 'end', values=[str(v) for v in r])
 
     def reset(self):
-        if os.path.exists(DB):
-            os.remove(DB)
-        init_db()
+        conn = get_conn(DB)
+        try:
+            with conn.cursor() as cur:
+                cur.execute('DROP TABLE IF EXISTS scores')
+                cur.execute('DROP TABLE IF EXISTS students')
+                cur.execute('DROP TABLE IF EXISTS courses')
+                cur.execute('''CREATE TABLE students (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    name VARCHAR(50) NOT NULL,
+                    age INT,
+                    major VARCHAR(50)
+                )''')
+                cur.execute('''CREATE TABLE courses (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    name VARCHAR(50) NOT NULL,
+                    credit INT
+                )''')
+                cur.execute('''CREATE TABLE scores (
+                    student_id INT NOT NULL,
+                    course_id INT NOT NULL,
+                    score INT,
+                    PRIMARY KEY (student_id, course_id),
+                    FOREIGN KEY (student_id) REFERENCES students(id),
+                    FOREIGN KEY (course_id) REFERENCES courses(id)
+                )''')
+                for stmt in SEED.split(';'):
+                    if stmt.strip():
+                        cur.execute(stmt)
+            conn.commit()
+        except Exception as e:
+            self.fill(['错误'], [[str(e)]])
+        finally:
+            conn.close()
         self.refresh_tables()
         self.fill(['结果'], [['数据已重置']])
 

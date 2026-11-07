@@ -1,24 +1,27 @@
 -- ============================================
--- 01 建库建表（SQLite 语法，零安装）
+-- 01 建库建表（MySQL 语法）
 -- ============================================
 
+CREATE DATABASE IF NOT EXISTS StudyDB DEFAULT CHARACTER SET utf8mb4;
+USE StudyDB;
+
 CREATE TABLE IF NOT EXISTS students (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    age INTEGER,
-    major TEXT
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL,
+    age INT,
+    major VARCHAR(50)
 );
 
 CREATE TABLE IF NOT EXISTS courses (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    credit INTEGER
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL,
+    credit INT
 );
 
 CREATE TABLE IF NOT EXISTS scores (
-    student_id INTEGER NOT NULL,
-    course_id INTEGER NOT NULL,
-    score INTEGER,
+    student_id INT NOT NULL,
+    course_id INT NOT NULL,
+    score INT,
     PRIMARY KEY (student_id, course_id),
     FOREIGN KEY (student_id) REFERENCES students(id),
     FOREIGN KEY (course_id) REFERENCES courses(id)

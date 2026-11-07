@@ -1,29 +1,42 @@
-"""生成 demo.db 练习数据库（控制台版）
-用法: python demo.py
+"""MySQL 练习库初始化（控制台版）
+用法: python demo.py（需要 MySQL 服务已启动）
 """
-import sqlite3
-import os
+import pymysql
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-DB = os.path.join(HERE, 'demo.db')
+CFG = dict(host='localhost', port=3306, user='root', password='root',
+           charset='utf8mb4', autocommit=True)
 
-if os.path.exists(DB):
-    os.remove(DB)
-
-conn = sqlite3.connect(DB)
+conn = pymysql.connect(**CFG)
 cur = conn.cursor()
+cur.execute('CREATE DATABASE IF NOT EXISTS StudyDB DEFAULT CHARACTER SET utf8mb4')
+conn.select_db('StudyDB')
 
-with open(os.path.join(HERE, '01_建库建表.sql'), encoding='utf-8') as f:
-    cur.executescript(f.read())
+for name, ddl in [
+    ('students', '''CREATE TABLE IF NOT EXISTS students (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(50) NOT NULL,
+        age INT,
+        major VARCHAR(50))'''),
+    ('courses', '''CREATE TABLE IF NOT EXISTS courses (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(50) NOT NULL,
+        credit INT)'''),
+    ('scores', '''CREATE TABLE IF NOT EXISTS scores (
+        student_id INT NOT NULL,
+        course_id INT NOT NULL,
+        score INT,
+        PRIMARY KEY (student_id, course_id),
+        FOREIGN KEY (student_id) REFERENCES students(id),
+        FOREIGN KEY (course_id) REFERENCES courses(id))'''),
+]:
+    cur.execute(ddl)
 
-cur.executescript("""
-INSERT INTO students (name, age, major) VALUES ('张三', 20, '计算机科学');
-INSERT INTO students (name, age, major) VALUES ('李四', 21, '软件工程');
-INSERT INTO students (name, age, major) VALUES ('王五', 19, '人工智能');
-INSERT INTO courses (name, credit) VALUES ('数据结构', 4), ('操作系统', 3), ('计算机网络', 3);
-INSERT INTO scores VALUES (1, 1, 92), (1, 2, 88), (2, 1, 76), (3, 3, 95);
-""")
+cur.execute('DELETE FROM scores')
+cur.execute('DELETE FROM students')
+cur.execute('DELETE FROM courses')
+cur.execute("INSERT INTO students (name, age, major) VALUES ('张三',20,'计算机科学'),('李四',21,'软件工程'),('王五',19,'人工智能')")
+cur.execute("INSERT INTO courses (name, credit) VALUES ('数据结构',4),('操作系统',3),('计算机网络',3)")
+cur.execute("INSERT INTO scores VALUES (1,1,92),(1,2,88),(2,1,76),(3,3,95)")
 
-conn.commit()
 conn.close()
-print('demo.db 已生成，可用可视化窗口打开练习')
+print('StudyDB 已初始化，可打开可视化窗口练习')
