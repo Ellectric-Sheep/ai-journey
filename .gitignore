@@ -1,8 +1,6 @@
 __pycache__/
 *.pyc
 *.exe
-*.db
-*.db-journal
 .venv/
 venv/
 .ipynb_checkpoints/
